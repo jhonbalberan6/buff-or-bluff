@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="g2.css">
+</head>
+<body>
+    <img id="logo" src="../images/Logo.png">
+    <img class="images" src="../images/g2.jpg" alt="Image 1">
+    <p id="p1">
+        1. Luna — The Dream Girl
+    </p>
+    <p id="p2">
+        This is Luna — soft-spoken, brilliant, and lightyears out of your league. <br><br>
+        She talks like she's from another world and trains like she’s preparing to return to it. 
+        If you fail her challenge, she just smiles and says, “It’s okay… I didn’t expect you to keep up.” <br><br>
+        You will get stronger — not for glory, but to be the one who stands between her and whatever's coming.
+    </p>
+    <a href="../menu.html"><img src="../images/back.png" id="back"></a>
+    <button id="generateButton">PALAG</button>
+    <script>
+        function randomInteger(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getExercise(num) {
+            if (num === 1) {
+                return { name: 'Push-ups', image: 'gifs/pushups.gif' };
+            } else if (num === 2) {
+                return { name: 'Squats', image: 'gifs/squats.gif' };
+            } else if (num === 3) {
+                return { name: 'Pull-ups', image: 'gifs/pullups.gif' };
+            } else {
+                return { name: 'Crunches / Leg raises', image: 'gifs/crunches.gif' };
+            }
+        }
+
+        document.getElementById('generateButton').addEventListener('click', function () {
+            const reps = randomInteger(6, 8);
+            const sets = randomInteger(2, 3);
+            const exerciseNum = randomInteger(1, 4);
+            const exercise = getExercise(exerciseNum);
+
+            // Store values in localStorage
+            localStorage.setItem('reps', reps);
+            localStorage.setItem('sets', sets);
+            localStorage.setItem('exerciseName', exercise.name);
+            localStorage.setItem('exerciseImage', exercise.image);
+
+            // Redirect to g1start.html
+            window.location.href = 'g2start.html';
+        });
+    </script>
+</body>
+</html>

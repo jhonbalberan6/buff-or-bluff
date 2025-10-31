@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="g3start.css">
+</head>
+<body>
+    <img id="logo" src="../images/Logo.png">
+    <img class="images" src="../images/g3.jpg" alt="Image 1">
+    <p id="p1">
+        3. Rhea — The Iron Valkyrie
+    </p>
+    <p id="exercise-dialogue"></p>
+    <div id="ctdwn-container">
+        <p id="countdown" class="info"><span id="startingMinutesDisplay"></span>:00</p>
+    </div>
+    <div id="exercise-image-container">
+        <img class="images" id="exerciseImage" src="" alt="Exercise Image">
+    </div>
+    <div id="modes">
+        <button class="mode" data-min="1">Quick 60s</button>
+        <button class="mode" data-min="2">Standard</button>
+        <button class="mode" data-min="3">Spicy</button>
+    </div>
+    <button id="soundToggle">Sound: Off</button>
+    <button id="generateButton">Start</button>
+    <button id="cancelButton" style="display:none;">Cancel</button>
+    <button id="doneButton">Done</button>
+    <a href="../menu.html"><img src="../images/back.png" id="back"></a>
+
+<script src="g3start.js"></script>
+<script>
+    function getImageByExerciseName(name) {
+        switch(name) {
+            case 'Push-ups':
+                return '../gifs/pushups.gif';
+            case 'Squats':
+                return '../gifs/squats.gif';
+            case 'Pull-ups':
+                return '../gifs/pullups.gif';
+            case 'Crunches / Leg raises':
+                return '../gifs/crunches.gif';
+            default:
+                return '../gifs/crunches.gif';
+        }
+    }
+
+    const reps = localStorage.getItem('reps');
+    const sets = localStorage.getItem('sets');
+    const exerciseName = localStorage.getItem('exerciseName');
+
+    if (exerciseName) {
+        const exerciseImage = getImageByExerciseName(exerciseName);
+        document.getElementById('exerciseImage').src = exerciseImage;
+
+        const startingMinutes = getChallengeMinutes(exerciseName, sets);
+        document.getElementById('startingMinutesDisplay').textContent = startingMinutes;
+    }
+
+    const lines = {
+        start: [
+            'Steel is honest — be honest back.',
+            'Hold the line.',
+            'Earn your place.'
+        ]
+    };
+    function say(stage){ const a = lines[stage]; return a[Math.floor(Math.random()*a.length)]; }
+    const dialogue = `${say('start')} Steel test: ${exerciseName}, ${sets} sets, ${reps} reps.`;
+    document.getElementById('exercise-dialogue').textContent = dialogue;
+
+    function getChallengeMinutes(name, sets) {
+        if (name === 'Push-ups') {
+            return sets === '2' ? 2 : 3;
+        } else if (name === 'Squats') {
+            return sets === '2' ? 2 : 3;
+        } else if (name === 'Pull-ups') {
+            return sets === '2' ? 3 : 4;
+        } else if (name === 'Crunches / Leg raises') {
+            return sets === '2' ? 1 : 2;
+        } else {
+            return 2;
+        }
+    }
+
+    let intervalId = null;
+    let time = 0;
+    let selectedModeMinutes = null;
+
+    // Simple beep using Web Audio API
+    let soundOn = false;
+    document.getElementById('soundToggle').onclick = function(){
+        soundOn = !soundOn;
+        this.textContent = `Sound: ${soundOn ? 'On' : 'Off'}`;
+    };
+    function beep(){
+        if(!soundOn) return;
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.05;
+        o.start(); setTimeout(()=>{ o.stop(); ctx.close(); }, 120);
+    }
+
+    function updateCountdown() {
+        const minutes = Math.floor(time / 60);
+        let seconds = time % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+
+        const countdownEl = document.getElementById('countdown');
+        countdownEl.innerHTML = `${minutes}:${seconds}`;
+        if (time <= 10) { countdownEl.classList.add('danger'); } else { countdownEl.classList.remove('danger'); }
+
+        if (time <= 0) {
+            clearInterval(intervalId);
+            beep();
+            recordSessionStats();
+        }
+
+        time--;
+    }
+
+    // Mode buttons
+    document.querySelectorAll('.mode').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            selectedModeMinutes = parseInt(this.getAttribute('data-min'), 10);
+            document.getElementById('startingMinutesDisplay').textContent = selectedModeMinutes;
+        });
+    });
+
+    document.getElementById('generateButton').onclick = function() {
+        this.style.display = 'none';
+        const startingMinutes = selectedModeMinutes || getChallengeMinutes(exerciseName, sets);
+        time = startingMinutes * 60;
+        document.getElementById('ctdwn-container').style.display = 'block';
+        document.getElementById('exercise-image-container').style.display = 'block';
+        document.getElementById('exercise-dialogue').style.display = 'block';
+        beep();
+        intervalId = setInterval(updateCountdown, 1000);
+        document.getElementById('cancelButton').style.display = 'inline-block';
+    };
+
+    // Lazy-create prompt on Done click
+
+    // (removed legacy success modal)
+
+    // Record lightweight stats for menu
+    function recordSessionStats(){
+      const startedMinutes = (typeof selectedModeMinutes === 'number' && !isNaN(selectedModeMinutes)) ? selectedModeMinutes : getChallengeMinutes(exerciseName, sets);
+      const totalSeconds = startedMinutes * 60;
+      const elapsed = Math.max(0, totalSeconds - Math.max(0, time));
+      const today = new Date();
+      const ymd = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      const storedDate = localStorage.getItem('sessionsDate');
+      const currentCount = parseInt(localStorage.getItem('sessionsCount')||'0',10);
+      const setsNum = parseInt(sets||'0',10);
+      const repsNum = parseInt(reps||'0',10);
+      const difficulty = (exerciseName==='Pull-ups') ? 2 : (exerciseName==='Crunches / Leg raises' ? 0.8 : 1);
+      const base = setsNum * repsNum * difficulty;
+      const ratio = totalSeconds>0 ? (elapsed/totalSeconds) : 1;
+      const score = Math.max(1, Math.round(base * ratio * 10));
+      if (storedDate === ymd) {
+        localStorage.setItem('sessionsCount', String(currentCount + 1));
+        const todayScore = parseInt(localStorage.getItem('sessionsScore')||'0',10);
+        localStorage.setItem('sessionsScore', String(todayScore + score));
+      } else {
+        localStorage.setItem('sessionsDate', ymd);
+        localStorage.setItem('sessionsCount', '1');
+        localStorage.setItem('sessionsScore', String(score));
+      }
+      localStorage.setItem('lastGirl', 'Rhea — The Iron Valkyrie');
+      localStorage.setItem('lastExercise', exerciseName||'');
+      localStorage.setItem('lastSets', String(sets||''));
+      localStorage.setItem('lastReps', String(reps||''));
+      localStorage.setItem('lastMinutes', String(startedMinutes));
+      localStorage.setItem('lastElapsed', String(elapsed));
+      localStorage.setItem('lastScore', String(score));
+      localStorage.setItem('lastTimestamp', new Date().toISOString());
+    }
+
+    // Done button opens inline prompt
+    document.getElementById('doneButton').addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      let promptEl = document.getElementById('donePrompt');
+      if (!promptEl) {
+        const donePromptHtml = `
+        <div id=\"donePrompt\" style=\"display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center;\"> 
+          <div style=\"background:#0A0E27; color:#FFF5E1; padding:18px; border-radius:12px; width:92%; max-width:360px; text-align:center; border:1px solid #26306e;\">
+            <div style=\"font-weight:bold; margin-bottom:8px;\">Are you really done?</div>
+            <div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\">
+              <button id=\"promptDone\" style=\"background:#FF3CAC; color:#FFF5E1; padding:8px 14px; border-radius:10px;\">I'm done</button>
+              <button id=\"promptAnother\" style=\"background:#172057; color:#FFF5E1; padding:8px 14px; border-radius:10px;\">Another challenge</button>
+              <button id=\"promptClose\" style=\"background:#172057; color:#FFF5E1; padding:8px 14px; border-radius:10px;\">Close</button>
+            </div>
+          </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', donePromptHtml);
+        document.getElementById('promptClose').onclick = function(){
+          document.getElementById('donePrompt').style.display = 'none';
+        };
+        document.getElementById('promptDone').onclick = function(){
+          recordSessionStats();
+          window.location.href = '../menu.html';
+        };
+        document.getElementById('promptAnother').onclick = function(){
+          document.getElementById('donePrompt').style.display = 'none';
+          const n = Math.floor(Math.random()*4)+1;
+          const ex = (typeof getExercise==='function') ? getExercise(n) : { name: exerciseName };
+          const img = getImageByExerciseName(ex.name);
+          document.getElementById('exerciseImage').src = img;
+          document.getElementById('exercise-dialogue').textContent = `${ex.name} — fresh set.`;
+          const minutes = selectedModeMinutes || getChallengeMinutes(ex.name, sets);
+          clearInterval(intervalId);
+          time = minutes * 60;
+          intervalId = setInterval(updateCountdown, 1000);
+        };
+        promptEl = document.getElementById('donePrompt');
+      }
+      promptEl.style.display = 'flex';
+    });
+
+    // Cancel button
+    document.getElementById('cancelButton').onclick = function(){
+      clearInterval(intervalId);
+      window.location.href = '../menu.html';
+    };
+
+</script>
+
+</body>
+</html>
+
+

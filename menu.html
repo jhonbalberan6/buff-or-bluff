@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="menuStyles.css">
+</head>
+<body>
+    <a href="index.html"><img id="logo" src="images/Logo.png"></a>
+    <p>Who should you impress? </p>
+    <div id="statsBar" style="margin:10px 0; width:92%; max-width:520px; background:#11163a; color:#FFF5E1; border:1px solid #26306e; border-radius:12px; padding:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="font-weight:bold;">Today</div>
+            <div>
+                <span id="sessionsCount" style="opacity:.95; margin-right:10px;">Sessions: 0</span>
+                <span id="sessionsScore" style="opacity:.95;">Score: 0</span>
+            </div>
+        </div>
+        <div id="lastSession" style="margin-top:6px; opacity:.95; font-size:.95rem;">Last session: —</div>
+    </div>
+    <div style="margin-bottom:12px;">
+        <button id="surprise" style="background:#FF3CAC;color:#FFF5E1;font-size:1rem;padding:8px 16px;border-radius:10px;">Surprise me</button>
+    </div>
+    <div id="girls">
+        <a href="g1/g1.html">
+            <img class="images" src="images/g1.jpg" alt="Image 1">
+        </a>
+        <a href="g2/g2.html">
+            <img class="images" src="images/g2.jpg" alt="Image 2">
+        </a>
+        <a href="g3/g3.html">
+            <img class="images" src="images/g3.jpg" alt="Image 3">
+        </a>
+    </div>
+</body>
+<script>
+    document.getElementById('surprise').onclick = function(){
+        const pages = ['g1/g1.html','g2/g2.html','g3/g3.html'];
+        const pick = pages[Math.floor(Math.random()*pages.length)];
+        window.location.href = pick;
+    };
+
+    // Stats bar population from localStorage
+    (function(){
+        try {
+            const date = localStorage.getItem('sessionsDate');
+            const count = parseInt(localStorage.getItem('sessionsCount')||'0',10);
+            const today = new Date();
+            const ymd = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+            const sessionsToday = (date===ymd) ? count : 0;
+            document.getElementById('sessionsCount').textContent = `Sessions: ${sessionsToday}`;
+            const scoreToday = (date===ymd) ? parseInt(localStorage.getItem('sessionsScore')||'0',10) : 0;
+            document.getElementById('sessionsScore').textContent = `Score: ${scoreToday}`;
+
+            const girl = localStorage.getItem('lastGirl');
+            const ex = localStorage.getItem('lastExercise');
+            const sets = localStorage.getItem('lastSets');
+            const reps = localStorage.getItem('lastReps');
+            const mins = localStorage.getItem('lastMinutes');
+            const ts = localStorage.getItem('lastTimestamp');
+            const lastScore = localStorage.getItem('lastScore');
+            if (girl && ex && sets && reps && mins && ts) {
+                const when = new Date(ts);
+                const scoreStr = lastScore ? ` • Score ${lastScore}` : '';
+                document.getElementById('lastSession').textContent = `Last session: ${girl} — ${ex} • ${sets}x${reps} • ${mins} min • ${when.toLocaleTimeString()}${scoreStr}`;
+            }
+        } catch (e) {}
+    })();
+</script>
+</html>
