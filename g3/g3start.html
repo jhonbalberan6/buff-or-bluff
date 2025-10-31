@@ -157,10 +157,13 @@
       const currentCount = parseInt(localStorage.getItem('sessionsCount')||'0',10);
       const setsNum = parseInt(sets||'0',10);
       const repsNum = parseInt(reps||'0',10);
-      const difficulty = (exerciseName==='Pull-ups') ? 2 : (exerciseName==='Crunches / Leg raises' ? 0.8 : 1);
+      const difficultyMap = { 'Push-ups': 1.0, 'Squats': 1.0, 'Pull-ups': 2.0, 'Crunches / Leg raises': 0.8 };
+      const difficulty = (difficultyMap[exerciseName] !== undefined) ? difficultyMap[exerciseName] : 1.0;
+      const modeMult = (startedMinutes===1) ? 1.05 : (startedMinutes===3 ? 1.20 : 1.0);
+      const completionRatio = totalSeconds > 0 ? (elapsed/totalSeconds) : 1;
+      const completionMult = completionRatio >= 0.9 ? 1.0 : (completionRatio >= 0.6 ? 0.9 : 0.5);
       const base = setsNum * repsNum * difficulty;
-      const ratio = totalSeconds>0 ? (elapsed/totalSeconds) : 1;
-      const score = Math.max(1, Math.round(base * ratio * 10));
+      const score = Math.max(1, Math.min(999, Math.round(base * modeMult * completionMult)));
       if (storedDate === ymd) {
         localStorage.setItem('sessionsCount', String(currentCount + 1));
         const todayScore = parseInt(localStorage.getItem('sessionsScore')||'0',10);
